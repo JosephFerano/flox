@@ -53,6 +53,10 @@ type Token = {
     Line : int
 }
 
+type ScanErrorType =
+    | UnterminatedString
+    | UnexpectedCharacter
+    
 
 
 
