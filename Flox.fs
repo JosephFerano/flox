@@ -3,11 +3,16 @@
 open System
 open System.IO
 open Flox
+open Flox.Types
 
 let run source =
-    let tokens = Scanner.scanTokens source
-    for t in tokens do
-        printfn $"Token: \"{t}\""
+    printfn "Tokens:"
+    let tokens , errors = Scanner.scanTokens source
+    List.iter (fun t -> printfn $"\t\"{t.TokenType } ({t.Lexeme})\"") tokens
+    if errors.Length > 0 then
+        printfn "\tErrors:"
+        errors |> List.iter  (fun t -> printfn $"\t\t{t}")
+        
 
 let runFile filename =
     let script = File.ReadAllText(filename)
