@@ -49,7 +49,6 @@ module private ScannerInternal =
         let nt =
           { TokenType = Number
             Line = ctx.LineNum
-            Literal = Some (float num)
             Lexeme = num }
         { ctx with Tokens = nt::ctx.Tokens }
         
@@ -66,10 +65,9 @@ module private ScannerInternal =
     let rec stringLiteral ctx =
         match peekNext ctx with
         | Some '"' ->
-            let token = { TokenType = TokenType.String
+            let token = { TokenType = String
                           // Ignore starting quote
                           Lexeme = ctx.Source[ctx.Start + 1 .. ctx.Current] |> string
-                          Literal = None
                           Line = ctx.LineNum }
             { ctx with Tokens = token::ctx.Tokens }
             |> advance
@@ -90,7 +88,6 @@ module private ScannerInternal =
                     | Some tt -> tt
                     | None -> Identifier
                 Lexeme = word
-                Literal = None
                 Line = ctx.LineNum
             }
             { ctx with Tokens = token::ctx.Tokens }
@@ -105,7 +102,6 @@ module private ScannerInternal =
         let newToken = {
             TokenType = tokenType
             Lexeme = ctx.Source[ctx.Current] |> string
-            Literal = None
             Line = ctx.LineNum
         }
         { ctx with Tokens = newToken::ctx.Tokens }
@@ -117,7 +113,7 @@ module private ScannerInternal =
                 yesMatch , ctx.Source[ctx.Current .. ctx.Current + 1] , ctx.Current + 1
             | false ->
                 noMatch , ctx.Source[ctx.Current] |> string , ctx.Current
-        let newToken = { TokenType = tt ; Lexeme = lexeme ; Literal = None ; Line = ctx.LineNum }
+        let newToken = { TokenType = tt ; Lexeme = lexeme ; Line = ctx.LineNum }
         { ctx with Tokens = newToken::ctx.Tokens ; Current = curr }
 
     let scanTokens (source : string) =
@@ -164,7 +160,7 @@ module private ScannerInternal =
             | None -> ctx
             
         let ctx = scan initCtx
-        let eof = { TokenType = EOF ; Lexeme = "" ; Literal = None ; Line = ctx.LineNum }
+        let eof = { TokenType = EOF ; Lexeme = "" ; Line = ctx.LineNum }
         eof::ctx.Tokens |> List.rev , ctx.Errors |> List.rev
     
 let scanTokens source = ScannerInternal.scanTokens source

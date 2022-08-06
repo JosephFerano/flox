@@ -46,10 +46,15 @@ type TokenType =
     | EOF
     
 
+type Primitive =
+    | Null
+    | Num of float
+    | Str of string
+    | Bool of bool
+
 type Token = {
     TokenType : TokenType
     Lexeme : string
-    Literal : obj option
     Line : int
 }
 

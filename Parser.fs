@@ -4,7 +4,7 @@ open Flox.Types
 
 type Expr =
     | Empty
-    | Literal of obj
+    | Literal of Primitive
     | Unary of operator : Token * Expr
     | Binary of lhs : Expr * operator : Token * rhs : Expr
     | Grouping of Expr
@@ -22,7 +22,7 @@ let addExprAdvance expr = addExpression expr >> advance
 
 let matchTokenTypes ctx (tokenTypes : TokenType list) =
     ctx.Current < ctx.Tokens.Length
-    && tokenTypes |> List.contains ((peek ctx).TokenType)
+    && tokenTypes |> List.contains (peek ctx).TokenType
 
 let rec binaryDescend tokenTypes descend leftCtx =
     if matchTokenTypes leftCtx tokenTypes then
@@ -61,11 +61,11 @@ and unary ctx =
 and primary ctx =
     let token = peek ctx
     match token.TokenType with
-    | False   -> Literal false |> addExprAdvance ctx
-    | True    -> Literal true  |> addExprAdvance ctx
-    | Nil     -> Literal null  |> addExprAdvance ctx
-    | String  -> Literal $"\"{token.Lexeme}\"" |> addExprAdvance ctx
-    | Number  -> Literal (token.Literal |> Option.defaultValue 0.0) |> addExprAdvance ctx
+    | False  -> Bool false |> Literal  |> addExprAdvance ctx
+    | True   -> Bool true |> Literal  |> addExprAdvance ctx
+    | Nil    -> Null |> Literal |> addExprAdvance ctx
+    | String -> Str token.Lexeme |> Literal |> addExprAdvance ctx
+    | Number -> Num (token.Lexeme |> System.Double.Parse) |> Literal |> addExprAdvance ctx
     | LeftParen ->
         let ctx' = ctx |> advance |> expression 
         match (peek ctx').TokenType with
@@ -84,7 +84,10 @@ let rec prettyPrint expressions =
     let parenthesize s = $"({s})"
     match expressions with
     | Empty -> "()"
-    | Literal o -> if o = null then "nil" else string o
+    | Literal prim ->
+        match prim with
+        | Null -> "nil"
+        | p -> string p
     | Grouping exp ->
         let expStr = prettyPrint exp
         parenthesize $"group {expStr}"
