@@ -8,10 +8,17 @@ open Flox.Types
 let run source =
     printfn "Tokens:"
     let tokens , errors = Scanner.scanTokens source
-    List.iter (fun t -> printfn $"\t\"{t.TokenType } ({t.Lexeme})\"") tokens
+    List.iter (fun t -> printfn $"\t{t.TokenType } {t.Lexeme}") tokens
     if errors.Length > 0 then
         printfn "\tErrors:"
         errors |> List.iter  (fun t -> printfn $"\t\t{t}")
+    
+    if errors.Length = 0 then
+        // Parser.parseTokens tokens
+        // |> printfn "%A"
+        Parser.parseTokens tokens
+        |> Parser.prettyPrint
+        |> printfn "%s"
         
 
 let runFile filename =
