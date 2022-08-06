@@ -4,10 +4,10 @@ open Flox.Types
 
 type Expr =
     | Empty
+    | Literal of obj
     | Unary of operator : Token * Expr
     | Binary of lhs : Expr * operator : Token * rhs : Expr
     | Grouping of Expr
-    | Literal of obj
 
 type ParseContext = {
     Current : int
@@ -33,6 +33,17 @@ let rec binaryDescend tokenTypes descend leftCtx =
         |> binaryDescend tokenTypes descend
     else
         leftCtx
+        
+        
+let synchronize ctx =
+    let rec f acc =
+        if ctx.Current < ctx.Tokens.Length then
+            match ctx.Tokens[acc].TokenType with
+            | Semicolon | Fun | Var | For | If | While | Print | Return -> acc
+            | _ -> f (acc + 1)
+        else
+            acc
+    f ctx.Current
         
 let rec expression (ctx : ParseContext) = equality ctx
 
