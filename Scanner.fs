@@ -44,25 +44,24 @@ module private ScannerInternal =
     let isAlphaNumeric c = isAlpha c || isDigit c
     let (|AlphaNumeric|_|) c = if isAlphaNumeric c then Some () else None
         
-    let newNumToken ctx =
-        let num = ctx.Source[ctx.Start .. ctx.Current - 1] |> string
-        { TokenType = Number
-          Line = ctx.LineNum
-          Literal = Some (float num)
-          Lexeme = num }
+    let addNumToken ctx =
+        let num = ctx.Source[ctx.Start .. ctx.Current] |> string
+        let nt =
+          { TokenType = Number
+            Line = ctx.LineNum
+            Literal = Some (float num)
+            Lexeme = num }
+        { ctx with Tokens = nt::ctx.Tokens }
         
     let rec numericLiteral ctx =
-        match peek ctx with
+        match peekNext ctx with
         | Some Digit -> ctx |> advance |> numericLiteral
         | Some '.' ->
-            if peekNext ctx |> Option.mapWithDefault isDigit false then
-                ctx |> advance |> numericLiteral
-            else
-                // Go back one character so the scanner can pick up the erroneous Dot
-                { ctx with Tokens = (newNumToken ctx)::ctx.Tokens }
-                |> advance
+            if ctx |> advance |> peekNext |> Option.mapWithDefault isDigit false
+                then ctx |> advance |> numericLiteral
+                else addNumToken ctx
         | Some _
-        | None -> { ctx with Tokens = (newNumToken ctx)::ctx.Tokens }
+        | None -> addNumToken ctx
 
     let rec stringLiteral ctx =
         match peekNext ctx with
@@ -157,7 +156,7 @@ module private ScannerInternal =
                 | '\n'  -> { ctx with LineNum = ctx.LineNum + 1 }
                 | '"'   -> stringLiteral ctx
                 | Digit -> numericLiteral ctx
-                | Alpha -> ctx |> advance |> identifier
+                | Alpha -> ctx |> identifier
                 | _ -> { ctx with Errors = UnexpectedCharacter::ctx.Errors }
                 |> advance
                 |> fun ctx -> { ctx with Start = ctx.Current }
