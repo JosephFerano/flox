@@ -12,14 +12,14 @@ type RuntimeError = {
 let error token message = Error { Token = token ;  Message = message }
 
 let printPrimitive = function
-    | Null -> printf "nil"
+    | Null -> "nil"
     | Num n ->
         let sn = string n
         if sn.EndsWith(".0")
-            then printf $"{int n}"
-            else printf $"{n}"
-    | Str s -> printf $"%A{s}"
-    | Bool b -> if b then printf "true" else printf "false"
+            then $"{int n}"
+            else $"{n}"
+    | Str s -> s
+    | Bool b -> if b then "true" else "false"
 
 let rec private eval expr : Result<Primitive, RuntimeError> =
     match expr with
@@ -52,7 +52,11 @@ let rec private eval expr : Result<Primitive, RuntimeError> =
             | Plus         -> l +  r |> Num  |> Ok
             | Minus        -> l -  r |> Num  |> Ok
             | Star         -> l *  r |> Num  |> Ok
-            | Slash        -> l /  r |> Num  |> Ok
+            | Slash        ->
+                if r <> 0.0 then
+                    l /  r |> Num  |> Ok
+                else
+                    error op $"Division by zero"
             | _ -> error op $"Cannot use ({op.Lexeme}) operator on numbers"
         | Ok (Str l) , Ok (Str r) ->
             match op.TokenType with
@@ -60,6 +64,14 @@ let rec private eval expr : Result<Primitive, RuntimeError> =
             | BangEqual  -> l <> r |> Bool |> Ok
             | EqualEqual -> l =  r |> Bool |> Ok
             | _ -> error op $"Cannot use ({op.Lexeme}) operator on strings"
+        | Ok (Str ls) , Ok rp ->
+            match op.TokenType with
+            | Plus       -> ls + (printPrimitive rp) |> Str |> Ok
+            | _ -> error op $"Cannot use ({op.Lexeme}) operator when left operand is a string"
+        | Ok lp , Ok (Str rs) ->
+            match op.TokenType with
+            | Plus       -> (printPrimitive lp) + rs |> Str |> Ok
+            | _ -> error op $"Cannot use ({op.Lexeme}) operator when right operand is a string"
         | Ok (Bool l) , Ok (Bool r) ->
             match op.TokenType with
             | BangEqual  -> l <> r |> Bool |> Ok

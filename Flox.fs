@@ -26,7 +26,7 @@ let run source =
 let runFile filename =
     let script = File.ReadAllText(filename)
     match run script with
-    | Ok prim -> Interpreter.printPrimitive prim ; printf "\n"
+    | Ok prim -> Interpreter.printPrimitive prim |> printfn "%A"
     | Error e ->
         eprintfn $"{e}"
         exit 70
@@ -40,7 +40,7 @@ let runPrompt () =
             running <- false
         else
             match run line with
-            | Ok prim -> Interpreter.printPrimitive prim ; printf "\n"
+            | Ok prim -> Interpreter.printPrimitive prim |> printfn "%A"
             | Error e -> eprintfn $"{e}"
     
 
