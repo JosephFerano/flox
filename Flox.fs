@@ -21,17 +21,15 @@ let run source =
         Parser.parseTokens tokens
         |> tap (Parser.prettyPrint >> printfn "%s")
         |> Interpreter.interpret
-        |> Result.mapError (fun e -> e.Message)
+        |> Result.mapError (fun e -> e.Message + $"\n[line {e.Token.Line}]")
         
-
 let runFile filename =
     let script = File.ReadAllText(filename)
     match run script with
-    | Ok prim -> printfn $"%A{prim}"
+    | Ok prim -> Interpreter.printPrimitive prim ; printf "\n"
     | Error e ->
         eprintfn $"{e}"
         exit 70
-    
     
 let runPrompt () =
     let mutable running = true
@@ -42,7 +40,7 @@ let runPrompt () =
             running <- false
         else
             match run line with
-            | Ok prim -> printfn $"%A{prim}"
+            | Ok prim -> Interpreter.printPrimitive prim ; printf "\n"
             | Error e -> eprintfn $"{e}"
     
 

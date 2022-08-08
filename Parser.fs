@@ -71,6 +71,7 @@ and primary ctx =
         match (peek ctx').TokenType with
         | RightParen -> Grouping(ctx'.Expression) |> addExprAdvance ctx'
         | _ -> ctx'
+    | Identifier -> Null |> Literal |> addExprAdvance ctx
     | _ -> ctx
 
 let parseTokens tokens =

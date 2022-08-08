@@ -11,6 +11,16 @@ type RuntimeError = {
     
 let error token message = Error { Token = token ;  Message = message }
 
+let printPrimitive = function
+    | Null -> printf "nil"
+    | Num n ->
+        let sn = string n
+        if sn.EndsWith(".0")
+            then printf $"{int n}"
+            else printf $"{n}"
+    | Str s -> printf $"%A{s}"
+    | Bool b -> if b then printf "true" else printf "false"
+
 let rec private eval expr : Result<Primitive, RuntimeError> =
     match expr with
     | Empty -> Ok Null
@@ -30,7 +40,7 @@ let rec private eval expr : Result<Primitive, RuntimeError> =
             match op.TokenType with
             | BangEqual  -> Bool false |> Ok
             | EqualEqual -> Bool true |> Ok
-            | _ -> error op $"Cannot use ({op.Lexeme}) operator one or both operands are nil"
+            | _ -> error op $"Cannot use ({op.Lexeme}) operator when one or both operands are nil"
         | Ok (Num l) , Ok (Num r) ->
             match op.TokenType with
             | Greater      -> l >  r |> Bool |> Ok
@@ -56,7 +66,8 @@ let rec private eval expr : Result<Primitive, RuntimeError> =
             | EqualEqual -> l =  r |> Bool |> Ok
             | _ -> error op $"Cannot use ({op.Lexeme}) operator on booleans"
         | Ok lp , Ok rp ->
-            error op $"Cannot use ({op.Lexeme}) operator when types are different: left {Primitive.getTypeName lp} , right {Primitive.getTypeName rp}"
+            let types = $"left {Primitive.getTypeName lp} , right {Primitive.getTypeName rp}"
+            error op $"Cannot use ({op.Lexeme}) operator when types are different: {types}"
         | Error e , _ 
         | _ , Error e -> Error e
 
