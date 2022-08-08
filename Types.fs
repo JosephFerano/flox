@@ -52,6 +52,14 @@ type Primitive =
     | Str of string
     | Bool of bool
 
+[<RequireQualifiedAccess>]
+module Primitive =
+    let getTypeName = function
+        | Null   -> "nil"
+        | Num  _ -> "num"
+        | Str  _ -> "string"
+        | Bool _ -> "bool"
+    
 type Token = {
     TokenType : TokenType
     Lexeme : string

@@ -61,9 +61,9 @@ and unary ctx =
 and primary ctx =
     let token = peek ctx
     match token.TokenType with
-    | False  -> Bool false |> Literal  |> addExprAdvance ctx
-    | True   -> Bool true |> Literal  |> addExprAdvance ctx
-    | Nil    -> Null |> Literal |> addExprAdvance ctx
+    | Nil    -> Null       |> Literal |> addExprAdvance ctx
+    | False  -> Bool false |> Literal |> addExprAdvance ctx
+    | True   -> Bool true  |> Literal |> addExprAdvance ctx
     | String -> Str token.Lexeme |> Literal |> addExprAdvance ctx
     | Number -> Num (token.Lexeme |> System.Double.Parse) |> Literal |> addExprAdvance ctx
     | LeftParen ->

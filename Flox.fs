@@ -4,6 +4,7 @@ open System
 open System.IO
 open Flox
 open Flox.Types
+open Flox.Utilities
 
 let run source =
     printfn "Tokens:"
@@ -12,18 +13,25 @@ let run source =
     if errors.Length > 0 then
         printfn "\tErrors:"
         errors |> List.iter  (fun t -> printfn $"\t\t{t}")
-    
-    if errors.Length = 0 then
-        // Parser.parseTokens tokens
-        // |> printfn "%A"
+        errors
+        |> List.map string
+        |> String.concat "\n"
+        |> Error
+    else
         Parser.parseTokens tokens
-        |> Parser.prettyPrint
-        |> printfn "%s"
+        |> tap (Parser.prettyPrint >> printfn "%s")
+        |> Interpreter.interpret
+        |> Result.mapError (fun e -> e.Message)
         
 
 let runFile filename =
     let script = File.ReadAllText(filename)
-    run script
+    match run script with
+    | Ok prim -> printfn $"%A{prim}"
+    | Error e ->
+        eprintfn $"{e}"
+        exit 70
+    
     
 let runPrompt () =
     let mutable running = true
@@ -33,7 +41,9 @@ let runPrompt () =
         if line = null then
             running <- false
         else
-            run line
+            match run line with
+            | Ok prim -> printfn $"%A{prim}"
+            | Error e -> eprintfn $"{e}"
     
 
 match Environment.GetCommandLineArgs() with
